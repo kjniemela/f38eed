@@ -21,7 +21,7 @@ const Messages = (props) => {
             otherUser={otherUser}
           />
         );
-      }).reverse()}
+      })}
     </Box>
   );
 };

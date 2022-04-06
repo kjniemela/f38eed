@@ -107,7 +107,7 @@ const Home = ({ user, logout }) => {
       } else {
         conversations.forEach((convo) => {
           if (convo.id === message.conversationId) {
-            convo.messages.unshift(message);
+            convo.messages.push(message);
             convo.latestMessageText = message.text;
           }
         });
@@ -183,6 +183,10 @@ const Home = ({ user, logout }) => {
     const fetchConversations = async () => {
       try {
         const { data } = await axios.get('/api/conversations');
+        for (const convo of data) {
+          convo.messages.reverse();
+        }
+        console.log(data);
         setConversations(data);
       } catch (error) {
         console.error(error);
