@@ -196,7 +196,6 @@ const Home = ({ user, logout }) => {
         for (const convo of data) {
           convo.messages.reverse();
         }
-        console.log(data);
         setConversations(data);
       } catch (error) {
         console.error(error);
