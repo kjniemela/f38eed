@@ -18,7 +18,7 @@ router.get("/", async (req, res, next) => {
           user2Id: userId,
         },
       },
-      attributes: ["id"],
+      attributes: ["id", "lastReadByUser1", "lastReadByUser2"],
       order: [[Message, "createdAt", "DESC"]],
       include: [
         { model: Message, order: ["createdAt", "DESC"] },
@@ -52,13 +52,20 @@ router.get("/", async (req, res, next) => {
       const convoJSON = convo.toJSON();
 
       // set a property "otherUser" so that frontend will have easier access
+      // set properties "lastReadByMe" and "lastReadByOther" so that frontend will have easier access
       if (convoJSON.user1) {
         convoJSON.otherUser = convoJSON.user1;
         delete convoJSON.user1;
+        convoJSON.lastReadByMe = convoJSON.lastReadByUser2;
+        convoJSON.lastReadByOther = convoJSON.lastReadByUser1;
       } else if (convoJSON.user2) {
         convoJSON.otherUser = convoJSON.user2;
         delete convoJSON.user2;
+        convoJSON.lastReadByMe = convoJSON.lastReadByUser1;
+        convoJSON.lastReadByOther = convoJSON.lastReadByUser2;
       }
+      delete convoJSON.lastReadByUser1;
+      delete convoJSON.lastReadByUser2;
 
       // set property for online status of the other user
       if (onlineUsers.includes(convoJSON.otherUser.id)) {
@@ -69,6 +76,16 @@ router.get("/", async (req, res, next) => {
 
       // set properties for notification count and latest message preview
       convoJSON.latestMessageText = convoJSON.messages[0].text;
+      convoJSON.notificationCount = 0;
+      for (let i = 0; i < convoJSON.messages.length; i++) {
+        if (convoJSON.messages[i].id === convoJSON.lastReadByMe) {
+          break;
+        }
+        if (convoJSON.messages[i].senderId === convoJSON.otherUser.id) {
+          convoJSON.notificationCount++;
+        }
+      }
+
       conversations[i] = convoJSON;
     }
 
