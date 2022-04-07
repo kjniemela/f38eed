@@ -128,6 +128,29 @@ const Home = ({ user, logout }) => {
   );
 
   const setActiveChat = (username) => {
+
+    setConversations((prev) =>
+      prev.map((convo) => {
+        if (convo.otherUser.username === username && convo.notificationCount > 0) {
+          const updatedConvo = { ...convo };
+          updatedConvo.notificationCount = 0;
+
+          let latestReceivedMessage;
+          let i = updatedConvo.messages.length - 1;
+          do {
+            latestReceivedMessage = updatedConvo.messages[i];
+            i--;
+          } while (latestReceivedMessage.senderId !== updatedConvo.otherUser.id && i >= 0);
+
+          axios.put('/api/messages/read', latestReceivedMessage);
+
+          return updatedConvo;
+        } else {
+          return convo;
+        }
+      })
+    );
+
     setActiveConversation(username);
   };
 
