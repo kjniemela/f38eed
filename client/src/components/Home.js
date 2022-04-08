@@ -106,6 +106,7 @@ const Home = ({ user, logout }) => {
           id: message.conversationId,
           otherUser: sender,
           messages: [message],
+          notificationCount: 1,
         };
         newConvo.latestMessageText = message.text;
         setConversations((prev) => [newConvo, ...prev]);
@@ -116,6 +117,9 @@ const Home = ({ user, logout }) => {
               const updatedConvo = { ...convo };
               updatedConvo.messages.push(message);
               updatedConvo.latestMessageText = message.text;
+              if (updatedConvo.otherUser.username !== activeConversation && message.senderId === updatedConvo.otherUser.id) {
+                updatedConvo.notificationCount++;
+              }
               return updatedConvo;
             } else {
               return convo;
@@ -124,7 +128,7 @@ const Home = ({ user, logout }) => {
         );
       }
     },
-    [setConversations]
+    [setConversations, activeConversation]
   );
 
   const setActiveChat = (username) => {
