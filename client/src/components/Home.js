@@ -114,7 +114,7 @@ const Home = ({ user, logout }) => {
           prev.map((convo) => {
             if (convo.id === message.conversationId) {
               const updatedConvo = { ...convo };
-              updatedConvo.messages.push(message);
+              updatedConvo.messages = [...updatedConvo.messages, message];
               updatedConvo.latestMessageText = message.text;
               return updatedConvo;
             } else {
