@@ -84,7 +84,7 @@ const Home = ({ user, logout }) => {
         prev.map((convo) => {
           if (convo.otherUser.id === recipientId) {
             const updatedConvo = { ...convo };
-            updatedConvo.messages.push(message);
+            updatedConvo.messages = [...updatedConvo.messages, message];
             updatedConvo.latestMessageText = message.text;
             updatedConvo.id = message.conversationId;
             return updatedConvo;
