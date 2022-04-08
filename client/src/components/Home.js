@@ -62,9 +62,9 @@ const Home = ({ user, logout }) => {
     });
   };
 
-  const postMessage = (body) => {
+  const postMessage = async (body) => {
     try {
-      const data = saveMessage(body);
+      const data = await saveMessage(body);
 
       if (!body.conversationId) {
         addNewConvo(body.recipientId, data.message);
@@ -80,16 +80,21 @@ const Home = ({ user, logout }) => {
 
   const addNewConvo = useCallback(
     (recipientId, message) => {
-      conversations.forEach((convo) => {
-        if (convo.otherUser.id === recipientId) {
-          convo.messages.push(message);
-          convo.latestMessageText = message.text;
-          convo.id = message.conversationId;
-        }
-      });
-      setConversations(conversations);
+      setConversations((prev) =>
+        prev.map((convo) => {
+          if (convo.otherUser.id === recipientId) {
+            const updatedConvo = { ...convo };
+            updatedConvo.messages = [...updatedConvo.messages, message];
+            updatedConvo.latestMessageText = message.text;
+            updatedConvo.id = message.conversationId;
+            return updatedConvo;
+          } else {
+            return convo;
+          }
+        })
+      );
     },
-    [setConversations, conversations]
+    [setConversations]
   );
 
   const addMessageToConversation = useCallback(
@@ -104,17 +109,22 @@ const Home = ({ user, logout }) => {
         };
         newConvo.latestMessageText = message.text;
         setConversations((prev) => [newConvo, ...prev]);
+      } else {
+        setConversations((prev) =>
+          prev.map((convo) => {
+            if (convo.id === message.conversationId) {
+              const updatedConvo = { ...convo };
+              updatedConvo.messages = [...updatedConvo.messages, message];
+              updatedConvo.latestMessageText = message.text;
+              return updatedConvo;
+            } else {
+              return convo;
+            }
+          })
+        );
       }
-
-      conversations.forEach((convo) => {
-        if (convo.id === message.conversationId) {
-          convo.messages.push(message);
-          convo.latestMessageText = message.text;
-        }
-      });
-      setConversations(conversations);
     },
-    [setConversations, conversations]
+    [setConversations]
   );
 
   const setActiveChat = (username) => {
@@ -183,6 +193,9 @@ const Home = ({ user, logout }) => {
     const fetchConversations = async () => {
       try {
         const { data } = await axios.get('/api/conversations');
+        for (const convo of data) {
+          convo.messages.reverse();
+        }
         setConversations(data);
       } catch (error) {
         console.error(error);
