@@ -147,6 +147,12 @@ const Home = ({ user, logout }) => {
           } while (latestReceivedMessage.senderId !== updatedConvo.otherUser.id && i >= 0);
 
           axios.put('/api/messages/read', latestReceivedMessage);
+          socket.emit('message-read', {
+            conversationId: updatedConvo.id,
+            messageId: latestReceivedMessage.id,
+            readerId: user.id,
+            senderId: updatedConvo.otherUser.id,
+          });
 
           return updatedConvo;
         } else {
@@ -186,6 +192,24 @@ const Home = ({ user, logout }) => {
     );
   }, []);
 
+  const updateMessageReadStatus = useCallback((data) => {
+
+    setConversations((prev) =>
+      prev.map((convo) => {
+        if (convo.id === data.conversationId && convo.otherUser.id === data.readerId) {
+          const updatedConvo = { ...convo };
+
+          updatedConvo.lastReadByOther = data.messageId;
+
+          return updatedConvo;
+        } else {
+          return convo;
+        }
+      })
+    );
+
+  }, []);
+
   // Lifecycle
 
   useEffect(() => {
@@ -193,6 +217,7 @@ const Home = ({ user, logout }) => {
     socket.on('add-online-user', addOnlineUser);
     socket.on('remove-offline-user', removeOfflineUser);
     socket.on('new-message', addMessageToConversation);
+    socket.on('message-read', updateMessageReadStatus);
 
     return () => {
       // before the component is destroyed
@@ -200,8 +225,9 @@ const Home = ({ user, logout }) => {
       socket.off('add-online-user', addOnlineUser);
       socket.off('remove-offline-user', removeOfflineUser);
       socket.off('new-message', addMessageToConversation);
+      socket.off('message-read', updateMessageReadStatus);
     };
-  }, [addMessageToConversation, addOnlineUser, removeOfflineUser, socket]);
+  }, [addMessageToConversation, addOnlineUser, removeOfflineUser, updateMessageReadStatus, socket]);
 
   useEffect(() => {
     // when fetching, prevent redirect
