@@ -94,7 +94,7 @@ const Home = ({ user, logout }) => {
         prev.map((convo) => {
           if (convo.otherUser.id === recipientId) {
             const updatedConvo = { ...convo };
-            updatedConvo.messages.push(message);
+            updatedConvo.messages = [...updatedConvo.messages, message];
             updatedConvo.latestMessageText = message.text;
             updatedConvo.id = message.conversationId;
             return updatedConvo;
@@ -125,7 +125,7 @@ const Home = ({ user, logout }) => {
           prev.map((convo) => {
             if (convo.id === message.conversationId) {
               const updatedConvo = { ...convo };
-              updatedConvo.messages.push(message);
+              updatedConvo.messages = [...updatedConvo.messages, message];
               updatedConvo.latestMessageText = message.text;
               if (message.senderId === updatedConvo.otherUser.id) {
                 if (updatedConvo.otherUser.username === activeConversation) {
