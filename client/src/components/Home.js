@@ -78,6 +78,16 @@ const Home = ({ user, logout }) => {
     }
   };
 
+  const markMessageAsRead = useCallback((message, convo) => {
+    axios.put('/api/messages/read', message);
+    socket.emit('message-read', {
+      conversationId: convo.id,
+      messageId: message.id,
+      readerId: user.id,
+      senderId: convo.otherUser.id,
+    });
+  }, [socket, user]);
+
   const addNewConvo = useCallback(
     (recipientId, message) => {
       setConversations((prev) =>
@@ -117,8 +127,12 @@ const Home = ({ user, logout }) => {
               const updatedConvo = { ...convo };
               updatedConvo.messages.push(message);
               updatedConvo.latestMessageText = message.text;
-              if (updatedConvo.otherUser.username !== activeConversation && message.senderId === updatedConvo.otherUser.id) {
-                updatedConvo.notificationCount++;
+              if (message.senderId === updatedConvo.otherUser.id) {
+                if (updatedConvo.otherUser.username === activeConversation) {
+                  markMessageAsRead(message, updatedConvo);
+                } else {
+                  updatedConvo.notificationCount++;
+                }
               }
               return updatedConvo;
             } else {
@@ -128,7 +142,7 @@ const Home = ({ user, logout }) => {
         );
       }
     },
-    [setConversations, activeConversation]
+    [setConversations, activeConversation, markMessageAsRead]
   );
 
   const setActiveChat = (username) => {
@@ -146,13 +160,7 @@ const Home = ({ user, logout }) => {
             i--;
           } while (latestReceivedMessage.senderId !== updatedConvo.otherUser.id && i >= 0);
 
-          axios.put('/api/messages/read', latestReceivedMessage);
-          socket.emit('message-read', {
-            conversationId: updatedConvo.id,
-            messageId: latestReceivedMessage.id,
-            readerId: user.id,
-            senderId: updatedConvo.otherUser.id,
-          });
+          markMessageAsRead(latestReceivedMessage, updatedConvo);
 
           return updatedConvo;
         } else {
