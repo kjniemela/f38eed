@@ -93,11 +93,11 @@ const Home = ({ user, logout }) => {
       setConversations((prev) =>
         prev.map((convo) => {
           if (convo.otherUser.id === recipientId) {
-            const updatedConvo = { ...convo };
-            updatedConvo.messages = [...updatedConvo.messages, message];
-            updatedConvo.latestMessageText = message.text;
-            updatedConvo.id = message.conversationId;
-            return updatedConvo;
+            const convoCopy = { ...convo };
+            convoCopy.messages = [...convoCopy.messages, message];
+            convoCopy.latestMessageText = message.text;
+            convoCopy.id = message.conversationId;
+            return convoCopy;
           } else {
             return convo;
           }
@@ -124,17 +124,17 @@ const Home = ({ user, logout }) => {
         setConversations((prev) =>
           prev.map((convo) => {
             if (convo.id === message.conversationId) {
-              const updatedConvo = { ...convo };
-              updatedConvo.messages = [...updatedConvo.messages, message];
-              updatedConvo.latestMessageText = message.text;
-              if (message.senderId === updatedConvo.otherUser.id) {
-                if (updatedConvo.otherUser.username === activeConversation) {
-                  markMessageAsRead(message, updatedConvo);
+              const convoCopy = { ...convo };
+              convoCopy.messages = [...convoCopy.messages, message];
+              convoCopy.latestMessageText = message.text;
+              if (message.senderId === convoCopy.otherUser.id) {
+                if (convoCopy.otherUser.username === activeConversation) {
+                  markMessageAsRead(message, convoCopy);
                 } else {
-                  updatedConvo.notificationCount++;
+                  convoCopy.notificationCount++;
                 }
               }
-              return updatedConvo;
+              return convoCopy;
             } else {
               return convo;
             }
@@ -150,19 +150,19 @@ const Home = ({ user, logout }) => {
     setConversations((prev) =>
       prev.map((convo) => {
         if (convo.otherUser.username === username && convo.notificationCount > 0) {
-          const updatedConvo = { ...convo };
-          updatedConvo.notificationCount = 0;
+          const convoCopy = { ...convo };
+          convoCopy.notificationCount = 0;
 
           let latestReceivedMessage;
-          let i = updatedConvo.messages.length - 1;
+          let i = convoCopy.messages.length - 1;
           do {
-            latestReceivedMessage = updatedConvo.messages[i];
+            latestReceivedMessage = convoCopy.messages[i];
             i--;
-          } while (latestReceivedMessage.senderId !== updatedConvo.otherUser.id && i >= 0);
+          } while (latestReceivedMessage.senderId !== convoCopy.otherUser.id && i >= 0);
 
-          markMessageAsRead(latestReceivedMessage, updatedConvo);
+          markMessageAsRead(latestReceivedMessage, convoCopy);
 
-          return updatedConvo;
+          return convoCopy;
         } else {
           return convo;
         }
@@ -205,11 +205,11 @@ const Home = ({ user, logout }) => {
     setConversations((prev) =>
       prev.map((convo) => {
         if (convo.id === data.conversationId && convo.otherUser.id === data.readerId) {
-          const updatedConvo = { ...convo };
+          const convoCopy = { ...convo };
 
-          updatedConvo.lastReadByOther = data.messageId;
+          convoCopy.lastReadByOther = data.messageId;
 
-          return updatedConvo;
+          return convoCopy;
         } else {
           return convo;
         }
