@@ -18,10 +18,16 @@ router.get("/", async (req, res, next) => {
           user2Id: userId,
         },
       },
-      attributes: ["id", "lastReadByUser1", "lastReadByUser2"],
+      attributes: ["id"],
       order: [[Message, "createdAt", "DESC"]],
       include: [
-        { model: Message, order: ["createdAt", "DESC"] },
+        {
+          model: Message,
+          order: ["createdAt", "DESC"],
+          include: [
+            { model: User, attributes: ["id"] }
+          ]
+        },
         {
           model: User,
           as: "user1",
@@ -52,20 +58,13 @@ router.get("/", async (req, res, next) => {
       const convoJSON = convo.toJSON();
 
       // set a property "otherUser" so that frontend will have easier access
-      // set properties "lastReadByMe" and "lastReadByOther" so that frontend will have easier access
       if (convoJSON.user1) {
         convoJSON.otherUser = convoJSON.user1;
         delete convoJSON.user1;
-        convoJSON.lastReadByMe = convoJSON.lastReadByUser2;
-        convoJSON.lastReadByOther = convoJSON.lastReadByUser1;
       } else if (convoJSON.user2) {
         convoJSON.otherUser = convoJSON.user2;
         delete convoJSON.user2;
-        convoJSON.lastReadByMe = convoJSON.lastReadByUser1;
-        convoJSON.lastReadByOther = convoJSON.lastReadByUser2;
       }
-      delete convoJSON.lastReadByUser1;
-      delete convoJSON.lastReadByUser2;
 
       // set property for online status of the other user
       if (onlineUsers.includes(convoJSON.otherUser.id)) {
@@ -75,14 +74,26 @@ router.get("/", async (req, res, next) => {
       }
 
       // set properties for notification count and latest message preview
+      // set properties "lastReadByMe" and "lastReadByOther" so that frontend will have easier access
       convoJSON.latestMessageText = convoJSON.messages[0].text;
       convoJSON.notificationCount = 0;
+      let lastReadByMeFound = false;
+      let lastReadByOtherFound = false;
       for (let i = 0; i < convoJSON.messages.length; i++) {
-        if (convoJSON.messages[i].id === convoJSON.lastReadByMe) {
-          break;
+        const readerIds = convoJSON.messages[i].users.map(user => user.id);
+        if (!lastReadByMeFound && readerIds.includes(userId)) {
+          convoJSON.lastReadByMe = convoJSON.messages[i].id;
+          lastReadByMeFound = true;
         }
-        if (convoJSON.messages[i].senderId === convoJSON.otherUser.id) {
+        if (!lastReadByOtherFound && readerIds.includes(convoJSON.otherUser.id)) {
+          convoJSON.lastReadByOther = convoJSON.messages[i].id;
+          lastReadByOtherFound = true;
+        }
+        if (!lastReadByMeFound && convoJSON.messages[i].senderId !== userId) {
           convoJSON.notificationCount++;
+        }
+        if (lastReadByMeFound && lastReadByOtherFound) {
+          break;
         }
       }
 
