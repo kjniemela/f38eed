@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { Conversation, Message } = require("../../db/models");
+const { Conversation, Message, User } = require("../../db/models");
 const onlineUsers = require("../../onlineUsers");
 
 router.put("/read", async (req, res, next) => {
@@ -8,18 +8,13 @@ router.put("/read", async (req, res, next) => {
       return res.sendStatus(401);
     }
     const recipientId = req.user.id;
-    const { id, senderId, conversationId } = req.body;
-    const conversation = await Conversation.findOne({
+    const { id: messageId, senderId, conversationId } = req.body;
+    const message = await Message.findOne({
       where: {
-        id: conversationId
+        id: messageId
       }
     });
-    if (conversation.user1Id === recipientId) {
-      conversation.lastReadByUser1 = id;
-    } else if (conversation.user2Id === recipientId) {
-      conversation.lastReadByUser2 = id;
-    }
-    conversation.save();
+    message.addUser(req.user);
   } catch (error) {
     next(error);
   }
