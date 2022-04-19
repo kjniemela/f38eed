@@ -1,6 +1,33 @@
 const router = require("express").Router();
-const { Conversation, Message } = require("../../db/models");
+const { Conversation, Message, User } = require("../../db/models");
 const onlineUsers = require("../../onlineUsers");
+
+router.put("/read", async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.sendStatus(401);
+    }
+    const recipientId = req.user.id;
+    const { id: messageId, senderId, conversationId } = req.body;
+    const conversation = await Conversation.findOne({
+      where: {
+        id: conversationId
+      }
+    });
+    if (conversation.user1Id !== recipientId && conversation.user2Id !== recipientId) {
+      return res.sendStatus(401);
+    }
+    const message = await Message.findOne({
+      where: {
+        id: messageId
+      }
+    });
+    message.addUser(req.user);
+    res.sendStatus(204);
+  } catch (error) {
+    next(error);
+  }
+});
 
 // expects {recipientId, text, conversationId } in body (conversationId will be null if no conversation exists yet)
 router.post("/", async (req, res, next) => {

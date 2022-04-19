@@ -21,7 +21,13 @@ router.get("/", async (req, res, next) => {
       attributes: ["id"],
       order: [[Message, "createdAt", "DESC"]],
       include: [
-        { model: Message, order: ["createdAt", "DESC"] },
+        {
+          model: Message,
+          order: ["createdAt", "DESC"],
+          include: [
+            { model: User, attributes: ["id"] }
+          ]
+        },
         {
           model: User,
           as: "user1",
@@ -68,7 +74,29 @@ router.get("/", async (req, res, next) => {
       }
 
       // set properties for notification count and latest message preview
+      // set properties "lastReadByMe" and "lastReadByOther" so that frontend will have easier access
       convoJSON.latestMessageText = convoJSON.messages[0].text;
+      convoJSON.notificationCount = 0;
+      let lastReadByMeFound = false;
+      let lastReadByOtherFound = false;
+      for (let i = 0; i < convoJSON.messages.length; i++) {
+        const readerIds = convoJSON.messages[i].users.map(user => user.id);
+        if (!lastReadByMeFound && readerIds.includes(userId)) {
+          convoJSON.lastReadByMe = convoJSON.messages[i].id;
+          lastReadByMeFound = true;
+        }
+        if (!lastReadByOtherFound && readerIds.includes(convoJSON.otherUser.id)) {
+          convoJSON.lastReadByOther = convoJSON.messages[i].id;
+          lastReadByOtherFound = true;
+        }
+        if (!lastReadByMeFound && convoJSON.messages[i].senderId !== userId) {
+          convoJSON.notificationCount++;
+        }
+        if (lastReadByMeFound && lastReadByOtherFound) {
+          break;
+        }
+      }
+
       conversations[i] = convoJSON;
     }
 
