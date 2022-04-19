@@ -15,6 +15,7 @@ router.put("/read", async (req, res, next) => {
       }
     });
     message.addUser(req.user);
+    res.sendStatus(204);
   } catch (error) {
     next(error);
   }
