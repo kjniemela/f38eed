@@ -9,6 +9,14 @@ router.put("/read", async (req, res, next) => {
     }
     const recipientId = req.user.id;
     const { id: messageId, senderId, conversationId } = req.body;
+    const conversation = await Conversation.findOne({
+      where: {
+        id: conversationId
+      }
+    });
+    if (conversation.user1Id !== recipientId && conversation.user2Id !== recipientId) {
+      return res.sendStatus(401);
+    }
     const message = await Message.findOne({
       where: {
         id: messageId
