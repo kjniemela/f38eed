@@ -78,8 +78,8 @@ const Home = ({ user, logout }) => {
     }
   };
 
-  const markMessageAsRead = useCallback((message, convo) => {
-    axios.put('/api/messages/read', message);
+  const markMessageAsRead = useCallback(async (message, convo) => {
+    await axios.put('/api/messages/read', message);
     socket.emit('message-read', {
       conversationId: convo.id,
       messageId: message.id,
